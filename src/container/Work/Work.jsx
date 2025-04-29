@@ -1,16 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import Modal from 'react-modal';
 import { AiFillEye, AiFillGithub } from 'react-icons/ai';
 import { motion } from 'framer-motion';
-import { images } from '../../constants';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import 'swiper/css';
 
+import { images } from '../../constants';
 import { AppWrap, MotionWrap } from '../../wrapper';
 import './Work.scss';
+
+Modal.setAppElement('#root'); // مهم جداً عشان الـ accessibility
 
 const Work = () => {
   const [works, setWorks] = useState([]);
   const [filterWork, setFilterWork] = useState([]);
   const [activeFilter, setActiveFilter] = useState('All');
   const [animateCard, setAnimateCard] = useState({ y: 0, opacity: 1 });
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [selectedTitle, setSelectedTitle] = useState('');
 
   useEffect(() => {
     const dummyData = [
@@ -56,6 +65,8 @@ const Work = () => {
       }
     ];
 
+
+
     setWorks(dummyData);
     setFilterWork(dummyData);
   }, []);
@@ -73,6 +84,17 @@ const Work = () => {
         setFilterWork(works.filter((work) => work.tags.includes(item)));
       }
     }, 500);
+  };
+
+  const openModal = (images, title) => {
+    setSelectedImages(images);
+    setSelectedTitle(title);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedImages([]);
   };
 
   return (
@@ -99,9 +121,19 @@ const Work = () => {
         {filterWork.map((work, index) => (
           <div className="app__work-item app__flex" key={index}>
             <div className="app__work-img app__flex">
-              {work.imgUrls && work.imgUrls.map((img, imgIndex) => (
-                <img key={imgIndex} src={img} alt={`${work.title}-${imgIndex}`} className="work-img" />
-              ))}
+              <Swiper spaceBetween={10} slidesPerView={1}>
+                {work.imgUrls && work.imgUrls.map((img, imgIndex) => (
+                  <SwiperSlide key={imgIndex}>
+                    <img
+                      src={img}
+                      alt={`${work.title}-${imgIndex}`}
+                      className="work-img"
+                      onClick={() => openModal(work.imgUrls, work.title)}
+                      style={{ cursor: 'pointer' }}
+                    />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
 
               <motion.div
                 whileHover={{ opacity: [0, 1] }}
@@ -142,6 +174,25 @@ const Work = () => {
           </div>
         ))}
       </motion.div>
+
+      {/* Modal for full screen image slider */}
+      <Modal
+        isOpen={isModalOpen}
+        onRequestClose={closeModal}
+        contentLabel="Project Images"
+        className="modal"
+        overlayClassName="overlay"
+      >
+        <h3 className="modal-title">{selectedTitle}</h3>
+        <Swiper spaceBetween={10} slidesPerView={1}>
+          {selectedImages.map((img, index) => (
+            <SwiperSlide key={index}>
+              <img src={img} alt={`modal-img-${index}`} className="modal-image" />
+            </SwiperSlide>
+          ))}
+        </Swiper>
+        <button onClick={closeModal} className="modal-close">Close</button>
+      </Modal>
     </>
   );
 };
